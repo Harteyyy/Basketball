@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Баскетбол - игра и информация</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        header {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #ff9800;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav a:hover {
+            background-color: rgba(255, 152, 0, 0.7);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .content-section {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #ff9800;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ff9800;
+            padding-bottom: 8px;
+        }
+        
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        #game-canvas {
+            background: linear-gradient(to bottom, #87CEEB, #1E90FF);
+            border: 4px solid #8B4513;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .game-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        button {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #e68900;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ff9800;
+        }
+        
+        .probability-display {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .result-message {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .victory {
+            background-color: rgba(76, 175, 80, 0.7);
+        }
+        
+        .defeat {
+            background-color: rgba(244, 67, 54, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Баскетбол - игра и информация</h1>
+        <nav>
+            <a href="#about">О баскетболе</a>
+            <a href="#game">Игра</a>
+            <a href="#history">История</a>
+            <a href="#rules">Правила</a>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <section id="about" class="content-section">
+            <h2>О баскетболе</h2>
+            <p>Баскетбол — спортивная командная игра с мячом...</p>
+        </section>
+        
+        <section id="game" class="content-section">
+            <h2>Баскетбольная игра</h2>
+            <p>Попробуйте свои силы в баскетболе!</p>
+            
+            <div class="game-container">
+                <canvas id="game-canvas" width="800" height="500"></canvas>
+                
+                <div class="probability-display" id="probability-display">
+                    Нажмите "Бросить мяч" для расчета вероятности
+                </div>
+                
+                <div class="game-controls">
+                    <button id="throw-ball">Бросить мяч</button>
+                    <button id="start-game">Начать игру</button>
+                    <button id="reset-game">Сбросить</button>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Счет</div>
+                        <div id="score" class="stat-value">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Броски</div>
+                        <div id="shots-left" class="stat-value">5</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Попадания</div>
+                        <div id="shots-made" class="stat-value">0</div>
+                    </div>
+                </div>
+                
+                <div id="result-message" class="result-message"></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Убедимся, что код выполняется после загрузки DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            // Элементы игры
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            const scoreElement = document.getElementById('score');
+            const shotsLeftElement = document.getElementById('shots-left');
+            const shotsMadeElement = document.getElementById('shots-made');
+            const throwButton = document.getElementById('throw-ball');
+            const startButton = document.getElementById('start-game');
+            const resetButton = document.getElementById('reset-game');
+            const probabilityDisplay = document.getElementById('probability-display');
+            const resultMessage = document.getElementById('result-message');
+            
+            // Проверим, что все элементы найдены
+            if (!canvas || !throwButton) {
+                console.error('Не удалось найти элементы игры');
+                return;
+            }
+            
+            // Переменные игры
+            let score = 0;
+            let shotsMade = 0;
+            let shotsLeft = 5;
+            let gameActive = false;
+            let probability = 0;
+            let ballInAir = false;
+            let animationId;
+            
+            // Позиции объектов
+            const player = {
+                x: 150,
+                y: 400,
+                width: 40,
+                height: 80
+            };
+            
+            const ball = {
+                x: 170,
+                y: 370,
+                radius: 15,
+                color: '#ff8c00',
+                targetX: 0,
+                targetY: 0,
+                progress: 0
+            };
+            
+            const hoop = {
+                x: 650,
+                y: 200,
+                width: 80,
+                height: 10
+            };
+            
+            const backboard = {
+                x: 630,
+                y: 150,
+                width: 20,
+                height: 100
+            };
+            
+            // Функция отрисовки игрока
+            function drawPlayer() {
+                ctx.fillStyle = '#ff5722';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+                
+                ctx.beginPath();
+                ctx.arc(player.x + player.width/2, player.y - 15, 20, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffccbc';
+                ctx.fill();
+            }
+            
+            // Функция отрисовки мяча
+            function drawBall() {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            // Функция отрисовки корзины
+            function drawHoop() {
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(backboard.x, backboard.y, backboard.width, backboard.height);
+                
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(hoop.x, hoop.y, hoop.width, hoop.height);
+            }
+            
+            // Функция отрисовки площадки
+            function drawCourt() {
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            }
+            
+            // Функция обновления игры
+            function update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                drawCourt();
+                drawHoop();
+                drawPlayer();
+                drawBall();
+                
+                if (ballInAir) {
+                    ball.progress += 0.03;
+                    
+                    const t = ball.progress;
+                    const mt = 1 - t;
+                    const x = mt*mt*ball.x + 2*mt*t*(ball.x + 200) + t*t*ball.targetX;
+                    const y = mt*mt*ball.y + 2*mt*t*(ball.y - 150) + t*t*ball.targetY;
+                    
+                    ball.x = x;
+                    ball.y = y;
+                    
+                    if (ball.progress >= 1) {
+                        ballInAir = false;
+                        checkShotResult();
+                    }
+                }
+                
+                animationId = requestAnimationFrame(update);
+            }
+            
+            // Проверка результата броска
+            function checkShotResult() {
+                const success = Math.random() * 100 < probability;
+                
+                if (success) {
+                    score += 2;
+                    shotsMade++;
+                    scoreElement.textContent = score;
+                    shotsMadeElement.textContent = shotsMade;
+                    
+                    setTimeout(() => {
+                        resetBall();
+                        shotsLeft--;
+                        shotsLeftElement.textContent = shotsLeft;
+                        checkGameEnd();
+                    }, 500);
+                } else {
+                    resetBall();
+                    shotsLeft--;
+                    shotsLeftElement.textContent = shotsLeft;
+                    checkGameEnd();
+                }
+            }
+            
+            // Проверка окончания игры
+            function checkGameEnd() {
+                if (shotsLeft <= 0) {
+                    gameActive = false;
+                    throwButton.disabled = true;
+                    
+                    if (shotsMade >= 3) {
+                        resultMessage.textContent = "ПОБЕДА!";
+                        resultMessage.className = "result-message victory";
+                    } else {
+                        resultMessage.textContent = "ПОРАЖЕНИЕ";
+                        resultMessage.className = "result-message defeat";
+                    }
+                }
+            }
+            
+            // Сброс мяча
+            function resetBall() {
+                ball.x = 170;
+                ball.y = 370;
+                ball.progress = 0;
+            }
+            
+            // Бросок мяча
+            function throwBall() {
+                if (!gameActive || ballInAir || shotsLeft <= 0) return;
+                
+                probability = 50 + Math.random() * 40;
+                probabilityDisplay.textContent = `Вероятность попадания: ${probability.toFixed(1)}%`;
+                
+                const randomOffset = (Math.random() - 0.5) * 40;
+                ball.targetX = hoop.x + hoop.width/2 + randomOffset;
+                ball.targetY = hoop.y + 10;
+                
+                ballInAir = true;
+            }
+            
+            // Запуск игры
+            function startGame() {
+                gameActive = true;
+                score = 0;
+                shotsMade = 0;
+                shotsLeft = 5;
+                
+                scoreElement.textContent = score;
+                shotsMadeElement.textContent = shotsMade;
+                shotsLeftElement.textContent = shotsLeft;
+                
+                probabilityDisplay.textContent = "Нажмите 'Бросить мяч' для расчета вероятности";
+                resultMessage.textContent = "";
+                resultMessage.className = "";
+                
+                resetBall();
+                throwButton.disabled = false;
+            }
+            
+            // Сброс игры
+            function resetGame() {
+                gameActive = false;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+                
+                score = 0;
+                shotsMade = 0;
+                shotsLeft = 5;
+                
+                scoreElement.textContent = score;
+                shotsMadeElement.textContent = shotsMade;
+                shotsLeftElement.textContent = shotsLeft;
+                
+                probabilityDisplay.textContent = "Нажмите 'Начать игру' чтобы начать";
+                resultMessage.textContent = "";
+                resultMessage.className = "";
+                
+                resetBall();
+                throwButton.disabled = true;
+                
+                update();
+            }
+            
+            // Назначение обработчиков кнопок
+            throwButton.addEventListener('click', throwBall);
+            startButton.addEventListener('click', startGame);
+            resetButton.addEventListener('click', resetGame);
+            
+            // Инициализация игры
+            resetGame();
+            
+            console.log('Игра инициализирована успешно!');
+        });
+    </script>
+</body>
+</html>
